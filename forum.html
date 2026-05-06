@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Discussion Forum</title>
+<link rel="stylesheet" href="npdclstyle.css">
+<style>
+/* ===== Forum Styling ===== */
+.forum-container {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+/* Post box */
+.post-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+input {
+    padding: 8px;
+    margin: 5px 5px 5px 0;
+}
+
+button {
+    padding: 8px 12px;
+    background: #1a237e;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+/* Post card */
+.post {
+    background: #fff;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.reply {
+    margin-left: 20px;
+    margin-top: 10px;
+    padding: 10px;
+    background: #f1f1f1;
+    border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="forum-container">
+
+    <!-- New Post -->
+    <div class="post-box">
+        <textarea id="postText" placeholder="Write your discussion..."></textarea><br>
+
+        <label>
+            <input type="checkbox" id="anonymous"> Post Anonymously
+        </label><br>
+
+        <input type="text" id="name" placeholder="Name">
+        <input type="text" id="designation" placeholder="Designation"><br>
+
+        <button onclick="addPost()">Post</button>
+    </div>
+
+    <!-- Posts -->
+    <div id="posts"></div>
+
+</div>
+
+<script>
+let posts = JSON.parse(localStorage.getItem("forumPosts")) || [];
+
+function savePosts() {
+    localStorage.setItem("forumPosts", JSON.stringify(posts));
+}
+
+function addPost() {
+    let text = document.getElementById("postText").value;
+    let anonymous = document.getElementById("anonymous").checked;
+    let name = document.getElementById("name").value;
+    let designation = document.getElementById("designation").value;
+
+    if (!text.trim()) return alert("Write something!");
+
+    posts.unshift({
+        text,
+        name: anonymous ? "Anonymous" : name,
+        designation: anonymous ? "" : designation,
+        replies: []
+    });
+
+    savePosts();
+    renderPosts();
+
+    document.getElementById("postText").value = "";
+}
+
+function addReply(index) {
+    let replyText = document.getElementById("replyText"+index).value;
+    let anon = document.getElementById("replyAnon"+index).checked;
+    let name = document.getElementById("replyName"+index).value;
+    let desig = document.getElementById("replyDesig"+index).value;
+
+    if (!replyText.trim()) return;
+
+    posts[index].replies.push({
+        text: replyText,
+        name: anon ? "Anonymous" : name,
+        designation: anon ? "" : desig
+    });
+
+    savePosts();
+    renderPosts();
+}
+
+function renderPosts() {
+    let container = document.getElementById("posts");
+    container.innerHTML = "";
+
+    posts.forEach((post, i) => {
+        let div = document.createElement("div");
+        div.className = "post";
+
+        div.innerHTML = `
+            <b>${post.name}</b> ${post.designation ? "(" + post.designation + ")" : ""}<br>
+            <p>${post.text}</p>
+
+            <textarea id="replyText${i}" placeholder="Reply..."></textarea><br>
+
+            <label>
+                <input type="checkbox" id="replyAnon${i}"> Anonymous
+            </label><br>
+
+            <input type="text" id="replyName${i}" placeholder="Name">
+            <input type="text" id="replyDesig${i}" placeholder="Designation"><br>
+
+            <button onclick="addReply(${i})">Reply</button>
+
+            <div>
+                ${post.replies.map(r => `
+                    <div class="reply">
+                        <b>${r.name}</b> ${r.designation ? "(" + r.designation + ")" : ""}<br>
+                        ${r.text}
+                    </div>
+                `).join("")}
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+renderPosts();
+</script>
+
+</body>
+</html>
